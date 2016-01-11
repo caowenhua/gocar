@@ -1,7 +1,6 @@
 package bean
 
 type DriverRoute struct {
-	Uid int64 `m2s:"uid" json:"uid"`
 	Rid int64 `m2s:"rid" json:"rid"`
 	// StartTime int64   `m2s:"startTime" json:"startTime"`
 	// SPlace    string  `m2s:"sPlace" json:"sPlace"`
@@ -15,4 +14,6 @@ type DriverRoute struct {
 	UnitPrice float64 `m2s:"unitPrice" json:"unitPrice"`
 	Distance  float64 `m2s:"distance" json:"distance"`
 	Drid      int64   `m2s:"drid" json:"drid"`
+	Duid      int64   `m2s:"duid" json:"duid"`
+	IsEnable  bool    `m2s:isEnable" json:"isEnable"`
 }

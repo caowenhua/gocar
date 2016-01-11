@@ -12,4 +12,5 @@ type FindDriverRoute struct {
 	ECity     string  `m2s:"eCity" json:"eCity"`
 	Price     float64 `m2s:"price" json:"price"`
 	Drid      int64   `m2s:"drid" json:"drid"`
+	Duid      int64   `m2s:"duid" json:"drid"`
 }

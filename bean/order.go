@@ -7,4 +7,6 @@ type Order struct {
 	OrderNo   string  `m2s:"orderNo" json:"orderNo"`
 	Drid      int64   `m2s:"drid" json:"drid"`
 	Uid       int64   `m2s:uid" json:"uid"`
+	IsEnable  bool    `m2s:isEnable" json:"isEnable"`
+	Duid      int64   `m2s:"duid" json:"duid"`
 }

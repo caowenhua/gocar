@@ -17,7 +17,7 @@ func Register(userName string, mobile string, hobby string, head string, gender 
 	if err != nil {
 		return user.Uid, err
 	} else {
-		user, err := findUserById(id)
+		user, err := FindUserById(id)
 		return user.Uid, err
 	}
 }
@@ -99,6 +99,7 @@ func ChargeBalance(uid int64, money float64) (string, error) {
 	}
 }
 
+//司机的提现限制
 func WithDrawBalance(uid int64, money float64) (string, error) {
 	slice := []bean.User{}
 	err := dbutil.DbQueryS(Db, &slice, "SELECT * FROM tb_user WHERE uid=?", uid)
@@ -144,7 +145,7 @@ func findUserByMobile(mobile string) (bean.User, error) {
 	}
 }
 
-func findUserById(uid int64) (bean.User, error) {
+func FindUserById(uid int64) (bean.User, error) {
 	user := bean.User{}
 	slice := []bean.User{}
 	err := dbutil.DbQueryS(Db, &slice, "SELECT * FROM tb_user WHERE uid=?", uid)
@@ -156,6 +157,34 @@ func findUserById(uid int64) (bean.User, error) {
 			return slice[0], nil
 		} else {
 			return user, errors.New("user is not existed")
+		}
+	}
+}
+
+func IsUserExist(uid int64) error {
+	params := []bool{}
+	err := dbutil.DbQueryS(Db, &params, "SELECT isDriver FROM tb_user WHERE uid=?", uid)
+	if err != nil {
+		return err
+	} else {
+		if len(params) > 0 {
+			return nil
+		} else {
+			return errors.New("no such user")
+		}
+	}
+}
+
+func IsDriverExist(uid int64) error {
+	params := []bool{}
+	err := dbutil.DbQueryS(Db, &params, "SELECT isDriver FROM tb_user WHERE uid=? and isDriver=true", uid)
+	if err != nil {
+		return err
+	} else {
+		if len(params) > 0 {
+			return nil
+		} else {
+			return errors.New("no such user")
 		}
 	}
 }

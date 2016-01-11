@@ -26,6 +26,12 @@ func PanicErr(err error) {
 	}
 }
 
+func recordTxErr(txerr *error, runningErr *error) {
+	if *runningErr != nil {
+		txerr = runningErr
+	}
+}
+
 func Method() ([]float64, error) {
 	balance := []float64{}
 	err := dbutil.DbQueryS(Db, &balance, "SELECT balance FROM tb_user WHERE uid=1")
