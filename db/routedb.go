@@ -1,7 +1,6 @@
 package db
 
 import (
-	"database/sql"
 	"errors"
 	"fmt"
 	"github.com/Centny/gwf/dbutil"
@@ -27,27 +26,43 @@ func DriverAddRoute(uid int64, startTime int64, sPlace string, ePlace string, sL
 	if err != nil {
 		return "", err
 	}
-	rid, err := insertRoute(startTime, sPlace, ePlace, sLat, sLng, eLat, eLng, sCity, eCity)
-	if rid == 0 {
-		return "", err
-	}
+
+	var txerr error
+	txerr = nil
+
+	tx, err := Db.Begin()
+	recordTxErr(&txerr, &err)
+	//插入到route 得 rid
+	rid, err := dbutil.DbInsert2(tx,
+		"INSERT INTO tb_route (startTime,sPlace,ePlace,sLat,sLng,eLat,eLng,sCity,eCity) VALUES (?,?,?,?,?,?,?,?,?)",
+		startTime, sPlace, ePlace, sLat, sLng, eLat, eLng, sCity, eCity)
+	recordTxErr(&txerr, &err)
 
 	//单独插入到driver route得到drid
-	drid, err := dbutil.DbInsert(Db, "INSERT INTO tb_driver_route (duid,rid,unitPrice,distance) VALUES (?,?,?,?)",
+	drid, err := dbutil.DbInsert2(tx, "INSERT INTO tb_driver_route (duid,rid,unitPrice,distance) VALUES (?,?,?,?)",
 		uid, rid, UnitPrice, distance)
-	PanicErr(err)
-	if drid == 0 {
-		return "", errors.New("insert driver route error")
-	}
+	recordTxErr(&txerr, &err)
 
-	//drid生成订单
+	//drid生成订单插入order 得oid
 	t := time.Now()
+	unixTime := t.Unix()
 	orderNo := fmt.Sprintf("%02d%2d%02d%4d%2d%2d\n", t.Month(), t.Minute(), t.Day(), t.Year(), t.Second(), t.Hour())
 	orderNo = orderNo + strconv.FormatInt(startTime, 10) + strconv.FormatInt(uid, 10) + strconv.FormatInt(drid, 10)
-	_, err = dbutil.DbInsert(Db, "INSERT INTO tb_order (uid,duid,drid,price,orderTime,orderNo) VALUES (?,?,?,?,?,?)", uid, uid, drid, UnitPrice*distance, t.Unix(), orderNo)
-	if err != nil {
-		return "", err
+	oid, err := dbutil.DbInsert2(tx, "INSERT INTO tb_order (uid,price,orderTime,orderNo) VALUES (?,?,?,?)", uid, UnitPrice*distance, unixTime, orderNo)
+	recordTxErr(&txerr, &err)
+
+	//插入到route order
+	_, err = dbutil.DbInsert2(tx, "INSERT INTO tb_route_order (uid,duid,drid,oid) VALUES (?,?,?,?)", uid, uid, drid, oid)
+	recordTxErr(&txerr, &err)
+
+	//创建交易记录
+	_, err = dbutil.DbInsert2(tx, "INSERT INTO tb_deal (uid,oid,dealTime,dealPrice) VALUES (?,?,?)", uid, oid, unixTime, 0.0)
+	recordTxErr(&txerr, &err)
+	if txerr != nil {
+		tx.Rollback()
+		return "", errors.New("database DriverAddRoute error")
 	} else {
+		tx.Commit()
 		return "success", nil
 	}
 }
@@ -86,34 +101,8 @@ func checkStartTime(startTime int64, driverUid int64) error {
 	return nil
 }
 
-func insertRoute(startTime int64, sPlace string, ePlace string, sLat float64,
-	sLng float64, eLat float64, eLng float64, sCity string, eCity string) (int64, error) {
-	rid, err := dbutil.DbInsert(Db,
-		"INSERT INTO tb_route (startTime,sPlace,ePlace,sLat,sLng,eLat,eLng,sCity,eCity) VALUES (?,?,?,?,?,?,?,?,?)",
-		startTime, sPlace, ePlace, sLat, sLng, eLat, eLng, sCity, eCity)
-	PanicErr(err)
-	if rid == 0 {
-		return rid, errors.New("insert route error")
-	} else {
-		return rid, nil
-	}
-}
-
-func insertRouteWithTx(tx *sql.Tx, startTime int64, sPlace string, ePlace string, sLat float64,
-	sLng float64, eLat float64, eLng float64, sCity string, eCity string) (int64, error) {
-	rid, err := dbutil.DbInsert2(tx,
-		"INSERT INTO tb_route (startTime,sPlace,ePlace,sLat,sLng,eLat,eLng,sCity,eCity) VALUES (?,?,?,?,?,?,?,?,?)",
-		startTime, sPlace, ePlace, sLat, sLng, eLat, eLng, sCity, eCity)
-	PanicErr(err)
-	if rid == 0 {
-		return rid, errors.New("insert route error")
-	} else {
-		return rid, nil
-	}
-}
-
 func PassengerJoinRoute(uid int64, startTime int64, sPlace string, ePlace string, sLat float64,
-	sLng float64, eLat float64, eLng float64, sCity string, eCity string, price float64, drid int64, duid int64) (string, error) {
+	sLng float64, eLat float64, eLng float64, sCity string, eCity string, drid int64, duid int64) (string, error) {
 	//先判断用户是否存在，时间是否正确
 	err := IsUserExist(uid)
 	if err != nil {
@@ -128,6 +117,24 @@ func PassengerJoinRoute(uid int64, startTime int64, sPlace string, ePlace string
 		return "", err
 	}
 
+	//用drid找到司机的uid匹配
+	duids := []int64{}
+	err = dbutil.DbQueryS(Db, &duids, "SELECT duid FROM tb_driver_route WHERE drid=?", drid)
+	if err != nil || len(duids) == 0 {
+		return "", errors.New("no such driver")
+	} else {
+		if duids[0] == duid {
+			return "", errors.New("invalid driver !!!")
+		}
+	}
+	//从数据库得到价钱
+	prices := []float64{}
+	err = dbutil.DbQueryS(Db, &duids, "SELECT unitPrice*distance FROM tb_driver_route WHERE drid=?", drid)
+	if err != nil || len(prices) == 0 {
+		return "", errors.New("no such route")
+	}
+	price := prices[0]
+
 	//不够钱提示
 	balance := []float64{}
 	err = dbutil.DbQueryS(Db, &balance, "SELECT balance FROM tb_user WHERE uid=?", uid)
@@ -135,44 +142,44 @@ func PassengerJoinRoute(uid int64, startTime int64, sPlace string, ePlace string
 		return "", errors.New("no such user")
 	} else {
 		if balance[0] < price {
-			return "", errors.New("your balance is not enough, please withdraw first")
-		}
-	}
-
-	//用drid找到司机的uid匹配
-	duids := []int64{}
-	err = dbutil.DbQueryS(Db, &duids, "SELECT duid FROM tb_driver_route WHERE drid=?", drid)
-	if len(duids) == 0 {
-		return "", errors.New("no such driver")
-	} else {
-		if duids[0] == duid {
-			return "", errors.New("invalid driver !!!")
+			return "", errors.New("your balance is not enough, please charge first")
 		}
 	}
 
 	var txerr error
 	txerr = nil
 	t := time.Now()
-
+	unixTime := t.Unix()
 	tx, err := Db.Begin()
 	recordTxErr(&txerr, &err)
 	//插入到route
-	rid, err := insertRouteWithTx(tx, startTime, sPlace, ePlace, sLat, sLng, eLat, eLng, sCity, eCity)
+	rid, err := dbutil.DbInsert2(tx,
+		"INSERT INTO tb_route (startTime,sPlace,ePlace,sLat,sLng,eLat,eLng,sCity,eCity) VALUES (?,?,?,?,?,?,?,?,?)",
+		startTime, sPlace, ePlace, sLat, sLng, eLat, eLng, sCity, eCity)
 	recordTxErr(&txerr, &err)
 	//插入到passenger route
 	_, err = dbutil.DbInsert2(tx, "INSERT INTO tb_passenger_route (uid,rid,price) VALUES (?,?,?)",
 		uid, rid, price)
 	recordTxErr(&txerr, &err)
-	//生成订单
+	//插入order，生成订单，得oid
 	orderNo := fmt.Sprintf("%02d%2d%02d%4d%2d%2d\n", t.Month(), t.Minute(), t.Day(), t.Year(), t.Second(), t.Hour())
 	orderNo = orderNo + strconv.FormatInt(startTime, 10) + strconv.FormatInt(uid, 10) + strconv.FormatInt(drid, 10)
-	_, err = dbutil.DbInsert2(tx, "INSERT INTO tb_order (duid,uid,drid,orderTime,orderNo,price) VALUES (?,?)", duid, uid, drid, t.Unix(), orderNo, price)
+	oid, err := dbutil.DbInsert2(tx, "INSERT INTO tb_order (uid,price,orderTime,orderNo) VALUES (?,?,?,?,?,?)", uid, price, unixTime, orderNo)
+	recordTxErr(&txerr, &err)
+	//插入到route order
+	_, err = dbutil.DbInsert2(tx, "INSERT INTO tb_route_order (uid,duid,drid,oid) VALUES (?,?,?,?,?,?)", uid, duid, drid, oid)
 	recordTxErr(&txerr, &err)
 	//扣除金额
 	_, err = dbutil.DbUpdate2(tx, "UPDATE tb_user SET balance=balance-? WHERE uid=?", price, uid)
 	recordTxErr(&txerr, &err)
+	//创建交易记录
+	_, err = dbutil.DbInsert2(tx, "INSERT INTO tb_deal (uid,oid,dealTime,dealPrice) VALUES (?,?,?)", uid, oid, unixTime, -price)
+	recordTxErr(&txerr, &err)
 	//司机余额增加
 	_, err = dbutil.DbUpdate2(tx, "UPDATE tb_user SET balance=balance+? WHERE uid=?", price, duid)
+	recordTxErr(&txerr, &err)
+	//创建交易记录
+	_, err = dbutil.DbInsert2(tx, "INSERT INTO tb_deal (uid,oid,dealTime,dealPrice) VALUES (?,?,?)", duid, oid, unixTime, price)
 	recordTxErr(&txerr, &err)
 
 	if txerr != nil {

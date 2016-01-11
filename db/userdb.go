@@ -85,50 +85,6 @@ func DeleteUserByMobile(mobile string) (string, error) {
 	return "config error", errors.New("config error")
 }
 
-func ChargeBalance(uid int64, money float64) (string, error) {
-	flag, err := dbutil.DbUpdate(Db, "UPDATE tb_user SET balance=balance+? WHERE uid=?", money, uid)
-	PanicErr(err)
-	if err != nil {
-		return "database error", err
-	} else {
-		if flag == 0 {
-			return "no such user", errors.New("no such user")
-		} else {
-			return "success", nil
-		}
-	}
-}
-
-//司机的提现限制
-func WithDrawBalance(uid int64, money float64) (string, error) {
-	slice := []bean.User{}
-	err := dbutil.DbQueryS(Db, &slice, "SELECT * FROM tb_user WHERE uid=?", uid)
-	PanicErr(err)
-	if err != nil {
-		return "database error", err
-	} else {
-		if len(slice) > 0 {
-			if slice[0].Balance < money {
-				return "no enough money", errors.New("no enough money")
-			} else {
-				flag, err := dbutil.DbUpdate(Db, "UPDATE tb_user SET balance=balance-? WHERE uid=?", money, uid)
-				PanicErr(err)
-				if err != nil {
-					return "database error", err
-				} else {
-					if flag == 0 {
-						return "no such user", errors.New("no such user")
-					} else {
-						return "success", nil
-					}
-				}
-			}
-		} else {
-			return "no such user", errors.New("no such user")
-		}
-	}
-}
-
 func findUserByMobile(mobile string) (bean.User, error) {
 	user := bean.User{}
 	slice := []bean.User{}
