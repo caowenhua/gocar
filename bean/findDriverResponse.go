@@ -1,7 +1,6 @@
 package bean
 
-type Route struct {
-	Rid       int64   `m2s:"rid" json:"rid"`
+type FindDriverRoute struct {
 	StartTime int64   `m2s:"startTime" json:"startTime"`
 	SPlace    string  `m2s:"sPlace" json:"sPlace"`
 	EPlace    string  `m2s:"ePlace" json:"ePlace"`
@@ -11,4 +10,6 @@ type Route struct {
 	ELng      float64 `m2s:"eLng" json:"eLng"`
 	SCity     string  `m2s:"sCity" json:"sCity"`
 	ECity     string  `m2s:"eCity" json:"eCity"`
+	Price     float64 `m2s:"price" json:"price"`
+	Drid      int64   `m2s:"drid" json:"drid"`
 }

@@ -50,24 +50,21 @@ func Login(hs *routing.HTTPSession) routing.HResult {
 
 func FillInfo(hs *routing.HTTPSession) routing.HResult {
 	var userName string
-	hobby := ""
-	var mobile string
-	head := ""
+	var hobby string
+	var head string
 	var gender int64
-	gender = 1
 	var uid int64
 	err := hs.ValidCheckVal(`
 		userName,R|S,L:0;
-		hobby,O|S,L:0;
-		mobile,R|S,L:0;
-		head,O|S,L:0;
-		gender,O|I,R:-1~2;
+		hobby,R|S,L:0;
+		head,R|S,L:0;
+		gender,R|I,R:-1~2;
 		uid,R|I,R:0
-		`, &userName, &hobby, &mobile, &head, &gender, &uid)
+		`, &userName, &hobby, &head, &gender, &uid)
 	if err != nil {
 		return hs.MsgResErr(100, "config error", err)
 	} else {
-		s, err := db.FillInfo(userName, mobile, hobby, head, gender, uid)
+		s, err := db.FillInfo(userName, hobby, head, gender, uid)
 		if err != nil {
 			return hs.MsgResErr2(1, "", err)
 		} else {
@@ -101,7 +98,10 @@ func DeleteUserByMobile(hs *routing.HTTPSession) routing.HResult {
 	if err != nil {
 		return hs.MsgResErr(100, "config error", err)
 	} else {
-		s := db.DeleteUserByMobile(mobile)
+		s, err := db.DeleteUserByMobile(mobile)
+		if err != nil {
+			return hs.MsgResErr2(1, "", err)
+		}
 		return hs.MsgRes(s)
 	}
 }
@@ -114,7 +114,46 @@ func DeleteUserById(hs *routing.HTTPSession) routing.HResult {
 	if err != nil {
 		return hs.MsgResErr(100, "config error", err)
 	} else {
-		s := db.DeleteUser(uid)
+		s, err := db.DeleteUser(uid)
+		if err != nil {
+			return hs.MsgResErr2(1, "", err)
+		}
+		return hs.MsgRes(s)
+	}
+}
+
+func ChargeBalance(hs *routing.HTTPSession) routing.HResult {
+	var uid int64
+	var money float64
+	err := hs.ValidCheckVal(`
+		uid,R|I,R:0;
+		money,R|F,R:0
+		`, &uid, &money)
+	if err != nil {
+		return hs.MsgResErr(100, "config error", err)
+	} else {
+		s, err := db.ChargeBalance(uid, money)
+		if err != nil {
+			return hs.MsgResErr2(1, "", err)
+		}
+		return hs.MsgRes(s)
+	}
+}
+
+func WithDrawBalance(hs *routing.HTTPSession) routing.HResult {
+	var uid int64
+	var money float64
+	err := hs.ValidCheckVal(`
+		uid,R|I,R:0;
+		money,R|F,R:0
+		`, &uid, &money)
+	if err != nil {
+		return hs.MsgResErr(100, "config error", err)
+	} else {
+		s, err := db.WithDrawBalance(uid, money)
+		if err != nil {
+			return hs.MsgResErr2(1, "", err)
+		}
 		return hs.MsgRes(s)
 	}
 }

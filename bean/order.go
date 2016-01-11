@@ -1,19 +1,10 @@
 package bean
 
-import (
-	"bytes"
-	"encoding/json"
-)
-
-type Response struct {
-	Status string
-	Msg    string
-	Data   interface{}
-}
-
-func (r Response) ToString() string {
-	js, _ := json.Marshal(r)
-	var buff bytes.Buffer
-	buff.Write(js)
-	return buff.String()
+type Order struct {
+	Oid       int64   `m2s:"oid" json:"oid"`
+	Price     float64 `m2s:"price" json:"price"`
+	OrderTime int64   `m2s:"orderTime" json:"orderTime"`
+	OrderNo   string  `m2s:"orderNo" json:"orderNo"`
+	Drid      int64   `m2s:"drid" json:"drid"`
+	Uid       int64   `m2s:uid" json:"uid"`
 }

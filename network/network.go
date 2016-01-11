@@ -21,10 +21,19 @@ func Listen() {
 	mux.HFunc("/user/fill", FillInfo)
 	mux.HFunc("/user/delbyid", DeleteUserById)
 	mux.HFunc("/user/delbym", DeleteUserByMobile)
+	mux.HFunc("/user/charge", ChargeBalance)
+	mux.HFunc("/user/withdraw", WithDrawBalance)
+	// mux.HFunc("/user/t", TestMethod)
 	fmt.Println(http.ListenAndServe(":4455", mux))
 }
 
 func Close() {
 	db.CloseDb()
 	fmt.Println("end listen")
+}
+
+func TestMethod(hs *routing.HTTPSession) routing.HResult {
+	balance, err := db.Method()
+	fmt.Println(balance, err)
+	return hs.MsgRes(balance)
 }
