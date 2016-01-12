@@ -21,8 +21,17 @@ func Listen() {
 	mux.HFunc("/user/fill", FillInfo)
 	mux.HFunc("/user/delbyid", DeleteUserById)
 	mux.HFunc("/user/delbym", DeleteUserByMobile)
-	mux.HFunc("/user/charge", ChargeBalance)
-	mux.HFunc("/user/withdraw", WithDrawBalance)
+
+	mux.HFunc("/route/dadd", DriverAddRoute)
+	mux.HFunc("/route/padd", PassengerJoinRoute)
+	mux.HFunc("/route/pfind", PassengerFindDriver)
+
+	mux.HFunc("/order/charge", ChargeBalance)
+	mux.HFunc("/order/withdraw", WithDrawBalance)
+	mux.HFunc("/order/dcancel", DriverCancelOrder)
+	mux.HFunc("/order/pcancel", PassengerCancelOrder)
+	mux.HFunc("/order/dlist", GetDriverOrderList)
+	mux.HFunc("/order/plist", GetPassengerOrderList)
 	// mux.HFunc("/user/t", TestMethod)
 	fmt.Println(http.ListenAndServe(":4455", mux))
 }

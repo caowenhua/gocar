@@ -121,39 +121,3 @@ func DeleteUserById(hs *routing.HTTPSession) routing.HResult {
 		return hs.MsgRes(s)
 	}
 }
-
-func ChargeBalance(hs *routing.HTTPSession) routing.HResult {
-	var uid int64
-	var money float64
-	err := hs.ValidCheckVal(`
-		uid,R|I,R:0;
-		money,R|F,R:0
-		`, &uid, &money)
-	if err != nil {
-		return hs.MsgResErr(100, "config error", err)
-	} else {
-		s, err := db.ChargeBalance(uid, money)
-		if err != nil {
-			return hs.MsgResErr2(1, "", err)
-		}
-		return hs.MsgRes(s)
-	}
-}
-
-func WithDrawBalance(hs *routing.HTTPSession) routing.HResult {
-	var uid int64
-	var money float64
-	err := hs.ValidCheckVal(`
-		uid,R|I,R:0;
-		money,R|F,R:0
-		`, &uid, &money)
-	if err != nil {
-		return hs.MsgResErr(100, "config error", err)
-	} else {
-		s, err := db.WithDrawBalance(uid, money)
-		if err != nil {
-			return hs.MsgResErr2(1, "", err)
-		}
-		return hs.MsgRes(s)
-	}
-}
