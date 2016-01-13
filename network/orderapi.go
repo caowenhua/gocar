@@ -91,8 +91,8 @@ func GetPassengerOrderList(hs *routing.HTTPSession) routing.HResult {
 	var pageCount int64
 	err := hs.ValidCheckVal(`
 		uid,R|I,R:0;
-		page,R|I,R:0;
-		pageCount,R|I,R:0;
+		page,O|I,R:0;
+		pageCount,O|I,R:0;
 		`, &uid, &page, &pageCount)
 	if err != nil {
 		return hs.MsgResErr(100, "config error", err)
@@ -110,10 +110,12 @@ func GetDriverOrderList(hs *routing.HTTPSession) routing.HResult {
 	var uid int64
 	var page int64
 	var pageCount int64
+	pageCount = 20
+	page = 1
 	err := hs.ValidCheckVal(`
 		uid,R|I,R:0;
-		page,R|I,R:0;
-		pageCount,R|I,R:0;
+		page,O|I,R:0;
+		pageCount,O|I,R:0;
 		`, &uid, &page, &pageCount)
 	if err != nil {
 		return hs.MsgResErr(100, "config error", err)

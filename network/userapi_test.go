@@ -45,7 +45,7 @@ func TestReg(t *testing.T) {
 	head := "http://e.hiphotos.baidu.com/image/h%3D200/sign=bc09df35750e0cf3bff749fb3a46f23d/2fdda3cc7cd98d102db27e16263fb80e7bec90b6.jpg"
 	hobby := "coding!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 	gender := 0
-	for i := 0; i < 20; i++ {
+	for i := 0; i < 10; i++ {
 		str := host + "/user/reg?userName=%v&mobile=%v&head=%v"
 		name := "c" + strconv.Itoa(ti.Nanosecond()) + strconv.Itoa(i)
 		mobile := "m" + strconv.Itoa(ti.Nanosecond()) + strconv.Itoa(i)
@@ -57,7 +57,7 @@ func TestReg(t *testing.T) {
 		writeString(s, err)
 		fmt.Println(vmap, err)
 	}
-	for i := 0; i < 20; i++ {
+	for i := 0; i < 10; i++ {
 		str := host + "/user/reg?userName=%v&mobile=%v&head=%v&gender=%d&hobby=%v"
 		name := "d" + strconv.Itoa(ti.Nanosecond()) + strconv.Itoa(i)
 		mobile := "n" + strconv.Itoa(ti.Nanosecond()) + strconv.Itoa(i)
@@ -71,7 +71,7 @@ func TestReg(t *testing.T) {
 	}
 	buff.WriteString("*************正常必要参数only注册****************\n")
 	fmt.Println("*************正常必要参数only注册****************")
-	for i := 0; i < 20; i++ {
+	for i := 0; i < 10; i++ {
 		str := host + "/user/reg?userName=%v&mobile=%v"
 		name := "e" + strconv.Itoa(ti.Nanosecond()) + strconv.Itoa(i)
 		mobile := "o" + strconv.Itoa(ti.Nanosecond()) + strconv.Itoa(i)
@@ -85,14 +85,14 @@ func TestReg(t *testing.T) {
 	}
 	buff.WriteString("*************缺省参数注册****************\n")
 	fmt.Println("*************缺省参数注册****************")
-	for i := 0; i < 20; i++ {
+	for i := 0; i < 10; i++ {
 		str := host + "/user/reg?userName=%v"
 		name := "f" + strconv.Itoa(ti.Nanosecond()) + strconv.Itoa(i)
 		vmap, err := util.HGet(str, name)
 		writeString(vmap, err)
 		fmt.Println(vmap, err)
 	}
-	for i := 0; i < 20; i++ {
+	for i := 0; i < 10; i++ {
 		str := host + "/user/reg?mobile=%v"
 		mobile := "g" + strconv.Itoa(ti.Nanosecond()) + strconv.Itoa(i)
 		regMobileSlice = append(regMobileSlice, mobile)
@@ -110,10 +110,10 @@ func TestReg(t *testing.T) {
 func TestLogin(t *testing.T) {
 	buff.WriteString("\n\n\n========================================================\n")
 	buff.WriteString("Test login begin\n\n\n\n")
-	buff.WriteString("*************正常保存后登陆（后20个mobile无效）****************\n")
+	buff.WriteString("*************正常保存后登陆（后10个mobile无效）****************\n")
 	fmt.Println("\n\n\n========================================================")
 	fmt.Println("Test login begin\n\n\n")
-	fmt.Println("*************正常保存后登陆（后20个mobile无效）****************")
+	fmt.Println("*************正常保存后登陆（后10个mobile无效）****************")
 	str := host + "/user/login?mobile=%v"
 	for _, m := range regMobileSlice {
 		vmap, err := util.HGet(str, m)
@@ -122,13 +122,13 @@ func TestLogin(t *testing.T) {
 	}
 	buff.WriteString("*************缺省参数登陆****************\n")
 	fmt.Println("*************缺省参数登陆****************")
-	for i := 0; i < 20; i++ {
+	for i := 0; i < 10; i++ {
 		str := host + "/user/login?"
 		vmap, err := util.HGet(str)
 		writeString(vmap, err)
 		fmt.Println(vmap, err)
 	}
-	for i := 0; i < 20; i++ {
+	for i := 0; i < 10; i++ {
 		str := host + "/user/login?uid=1"
 		vmap, err := util.HGet(str)
 		writeString(vmap, err)
@@ -162,14 +162,14 @@ func TestFillInfo(t *testing.T) {
 
 	buff.WriteString("*************缺省参数修改资料****************\n")
 	fmt.Println("*************缺省参数修改资料****************")
-	for i := 0; i < 20; i++ {
+	for i := 0; i < 10; i++ {
 		str := host + "/user/fill?userName=%v&head=%v&gender=%v&uid=%v"
 		name := "ccc" + strconv.Itoa(ti.Nanosecond()) + strconv.Itoa(i)
 		vmap, err := util.HGet(str, name, head, gender, uidSlice[i])
 		writeString(vmap, err)
 		fmt.Println(vmap, err)
 	}
-	for i := 0; i < 20; i++ {
+	for i := 0; i < 10; i++ {
 		str := host + "/user/fill?head=%v&gender=%v&uid=%v"
 		vmap, err := util.HGet(str, head, gender, uidSlice[i])
 		writeString(vmap, err)
@@ -205,7 +205,7 @@ func TestChargeBalance(t *testing.T) {
 	buff.WriteString("*************缺省参数ChargeBalance****************\n")
 	fmt.Println("*************缺省参数ChargeBalance****************")
 	str = host + "/user/charge?uid=555"
-	for i := 0; i < 20; i++ {
+	for i := 0; i < 10; i++ {
 		vmap, err := util.HGet(str)
 		writeString(vmap, err)
 		fmt.Println(vmap, err)
@@ -248,7 +248,7 @@ func TestWithDraw(t *testing.T) {
 	buff.WriteString("*************缺省参数WithDraw****************\n")
 	fmt.Println("*************缺省参数WithDraw****************")
 	str = host + "/user/withdraw?uid=555"
-	for i := 0; i < 20; i++ {
+	for i := 0; i < 10; i++ {
 		vmap, err := util.HGet(str)
 		writeString(vmap, err)
 		fmt.Println(vmap, err)
@@ -275,7 +275,7 @@ func TestAuthDriver(t *testing.T) {
 	buff.WriteString("*************缺省参数auth****************\n")
 	fmt.Println("*************缺省参数auth****************")
 	str = host + "/user/auth?mobile=123"
-	for i := 0; i < 20; i++ {
+	for i := 0; i < 10; i++ {
 		vmap, err := util.HGet(str)
 		writeString(vmap, err)
 		fmt.Println(vmap, err)
@@ -294,7 +294,7 @@ func TestDeleteUser(t *testing.T) {
 	fmt.Println("Test delete begin\n\n\n")
 	fmt.Println("*************正常delete****************")
 	str := host + "/user/delbyid?uid=%v"
-	for i := 0; i < 20; i++ {
+	for i := 0; i < 10; i++ {
 		vmap, err := util.HGet(str, uidSlice[i])
 		writeString(vmap, err)
 		fmt.Println(vmap, err)
@@ -308,7 +308,7 @@ func TestDeleteUser(t *testing.T) {
 	buff.WriteString("*************缺省参数delete****************\n")
 	fmt.Println("*************缺省参数delete****************")
 	str = host + "/user/delbym?head=112"
-	for i := 0; i < 20; i++ {
+	for i := 0; i < 10; i++ {
 		vmap, err := util.HGet(str)
 		writeString(vmap, err)
 		fmt.Println(vmap, err)
